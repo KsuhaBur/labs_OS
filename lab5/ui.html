@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Панель</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="row mb-3">
+      <div class="col-md-4">
+        <h2>Текущая температура: <span id="currentTemperature"></span></h2>
+      </div>
+    </div>
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">Панель просмотра температуры</h1>
+
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <label for="period">Выберите дату:</label>
+        <input type="date" id="period" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <button onclick="getTemperatureData()" class="btn btn-primary mt-4">Получить статистику</button>
+      </div>
+    </div>
+
+    
+    <div class="row mb-3">
+      <div class="col-md-8">
+        <table id="temperatureTable" class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Timestamp</th>
+              <th>Temperature</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    async function fetchData(url, onSuccess) {
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        onSuccess(data);
+      } catch (error) {
+        console.error('Error fetching data', error);
+      }
+    }
+	
+	setInterval(updateCurrentTemperature, 3000);
+    async function getTemperatureData() {
+      const selectedDate = document.getElementById('period').value;
+      const url = `http://localhost:3000/getTemperatureData?selectedDate=${selectedDate}`;
+
+      fetchData(url, (data) => {
+        updateTable(data);
+      });
+    }
+
+	async function updateCurrentTemperature() {
+		try {
+			const response = await fetch('http://localhost:3000/getCurrentTemperature');
+			const data = await response.json();
+		
+			document.getElementById('currentTemperature').innerText = data.currentTemperature;
+		} catch (error) {
+			console.error('Error updating current temperature', error);
+		}
+	}
+	
+    function updateTable(data) {
+      const tableBody = document.querySelector('#temperatureTable tbody');
+      tableBody.innerHTML = '';
+
+      data.temperatureData.reverse().forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${entry.id}</td><td>${entry.timestamp}</td><td>${entry.temperature}</td>`;
+        tableBody.appendChild(row);
+      });
+    }
+  </script>
+
+</body>
+</html>
